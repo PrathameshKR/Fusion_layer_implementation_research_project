@@ -12,15 +12,20 @@ def train_one_epoch(
 
     running_loss = 0
 
-    for images, labels in train_loader:
+    for raw_images, filtered_images, labels in train_loader:
 
-        images = images.to(device)
+        raw_images = raw_images.to(device)
+
+        filtered_images = filtered_images.to(device)
 
         labels = labels.to(device)
 
         optimizer.zero_grad()
 
-        outputs = model(images, images)
+        outputs = model(
+            raw_images,
+            filtered_images
+        )
 
         loss = criterion(outputs, labels)
 
@@ -30,4 +35,4 @@ def train_one_epoch(
 
         running_loss += loss.item()
 
-    return running_loss
+    return running_loss / len(train_loader)
