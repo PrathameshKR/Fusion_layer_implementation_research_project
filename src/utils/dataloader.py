@@ -4,12 +4,15 @@ from torch.utils.data import DataLoader
 import torch
 import cv2
 import numpy as np
+import random
 
-# ----------------------------
-# Add Gaussian Noise
-# ----------------------------
+from src.classical.filters import sobel_edges
 
-def add_gaussian_noise(image, mean=0, std=25):
+# -----------------------------------
+# Gaussian Noise
+# -----------------------------------
+
+def add_gaussian_noise(image, mean=0, std=50):
 
     noise = np.random.normal(
         mean,
@@ -23,9 +26,73 @@ def add_gaussian_noise(image, mean=0, std=25):
 
     return noisy.astype(np.uint8)
 
-# ----------------------------
+# -----------------------------------
+# Salt & Pepper Noise
+# -----------------------------------
+
+def add_salt_pepper_noise(image, amount=0.04):
+
+    noisy = image.copy()
+
+    num_salt = np.ceil(
+        amount * image.size * 0.5
+    )
+
+    coords = [
+        np.random.randint(
+            0,
+            i - 1,
+            int(num_salt)
+        )
+        for i in image.shape
+    ]
+
+    noisy[tuple(coords)] = 255
+
+    num_pepper = np.ceil(
+        amount * image.size * 0.5
+    )
+
+    coords = [
+        np.random.randint(
+            0,
+            i - 1,
+            int(num_pepper)
+        )
+        for i in image.shape
+    ]
+
+    noisy[tuple(coords)] = 0
+
+    return noisy
+
+# -----------------------------------
+# Motion Blur
+# -----------------------------------
+
+def add_motion_blur(image, kernel_size=5):
+
+    kernel = np.zeros(
+        (kernel_size, kernel_size)
+    )
+
+    kernel[
+        int((kernel_size - 1)/2), :
+    ] = np.ones(kernel_size)
+
+    kernel = kernel / kernel_size
+
+    blurred = cv2.filter2D(
+        image,
+        -1,
+        kernel
+    )
+
+    return blurred
+
+# -----------------------------------
 # Hybrid Transform
-# ----------------------------
+# -----------------------------------
 
 class HybridTransform:
 
@@ -33,27 +100,47 @@ class HybridTransform:
 
         image_np = np.array(image)
 
-        # --------------------------------
-        # RAW NOISY IMAGE
-        # --------------------------------
+        # -----------------------------
+        # RANDOM NOISE TYPE
+        # -----------------------------
 
-        noisy_image = add_gaussian_noise(
-            image_np
-        )
+        noise_type = random.choice([
+            "gaussian",
+            "salt_pepper",
+            "motion"
+        ])
+
+        if noise_type == "gaussian":
+
+            noisy_image = add_gaussian_noise(
+                image_np
+            )
+
+        elif noise_type == "salt_pepper":
+
+            noisy_image = add_salt_pepper_noise(
+                image_np
+            )
+
+        else:
+
+            noisy_image = add_motion_blur(
+                image_np
+            )
+
+        # -----------------------------
+        # RAW NOISY BRANCH
+        # -----------------------------
 
         raw_tensor = transforms.ToTensor()(
             noisy_image
         )
 
-        # --------------------------------
-        # FILTERED IMAGE
-        # --------------------------------
+        # -----------------------------
+        # SOBEL EDGE BRANCH
+        # -----------------------------
 
-        filtered = cv2.GaussianBlur(
-            noisy_image,
-            (3,3),
-            0
-        )
+        filtered = sobel_edges(noisy_image)
 
         filtered_tensor = transforms.ToTensor()(
             filtered
@@ -61,9 +148,9 @@ class HybridTransform:
 
         return raw_tensor, filtered_tensor
 
-# ----------------------------
+# -----------------------------------
 # Dataset Wrapper
-# ----------------------------
+# -----------------------------------
 
 class HybridDataset(torch.utils.data.Dataset):
 
@@ -81,13 +168,15 @@ class HybridDataset(torch.utils.data.Dataset):
 
         image, label = self.dataset[idx]
 
-        raw_img, filtered_img = self.transform(image)
+        raw_img, filtered_img = self.transform(
+            image
+        )
 
         return raw_img, filtered_img, label
 
-# ----------------------------
+# -----------------------------------
 # Dataloader
-# ----------------------------
+# -----------------------------------
 
 def get_dataloaders(batch_size=64):
 
@@ -103,9 +192,13 @@ def get_dataloaders(batch_size=64):
         download=True
     )
 
-    train_dataset = HybridDataset(base_train)
+    train_dataset = HybridDataset(
+        base_train
+    )
 
-    test_dataset = HybridDataset(base_test)
+    test_dataset = HybridDataset(
+        base_test
+    )
 
     train_loader = DataLoader(
         train_dataset,
