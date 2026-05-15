@@ -1,22 +1,48 @@
 import cv2
 import numpy as np
 
-def gaussian_filter(image):
+# -----------------------------------
+# Sobel Edge Extraction
+# -----------------------------------
 
-    return cv2.GaussianBlur(image, (3,3), 0)
+def sobel_edges(image):
 
-def median_filter(image):
+    gray = cv2.cvtColor(
+        image,
+        cv2.COLOR_RGB2GRAY
+    )
 
-    return cv2.medianBlur(image, 3)
+    sobelx = cv2.Sobel(
+        gray,
+        cv2.CV_64F,
+        1,
+        0
+    )
 
-def sobel_filter(image):
+    sobely = cv2.Sobel(
+        gray,
+        cv2.CV_64F,
+        0,
+        1
+    )
 
-    gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+    magnitude = np.sqrt(
+        sobelx**2 + sobely**2
+    )
 
-    sobelx = cv2.Sobel(gray, cv2.CV_64F, 1, 0)
+    magnitude = np.clip(
+        magnitude,
+        0,
+        255
+    )
 
-    sobely = cv2.Sobel(gray, cv2.CV_64F, 0, 1)
+    magnitude = magnitude.astype(
+        np.uint8
+    )
 
-    magnitude = np.sqrt(sobelx**2 + sobely**2)
+    magnitude = cv2.cvtColor(
+        magnitude,
+        cv2.COLOR_GRAY2RGB
+    )
 
     return magnitude

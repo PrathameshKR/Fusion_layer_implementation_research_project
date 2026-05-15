@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from src.fusion.weighted_fusion import WeightedFusion
+from src.fusion.weighted_fusion import AdaptiveFusion
 
 class HybridCNN(nn.Module):
 
@@ -16,7 +16,7 @@ class HybridCNN(nn.Module):
 
         self.pool = nn.MaxPool2d(2,2)
 
-        self.fusion = WeightedFusion()
+        self.fusion = AdaptiveFusion(channels=64)
 
         self.fc1 = nn.Linear(64 * 8 * 8, 256)
 
