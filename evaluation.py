@@ -32,7 +32,7 @@ baseline_model = BaselineCNN().to(device)
 # -----------------------------------
 
 hybrid_model.load_state_dict(
-    torch.load("hybrid_model.pth")
+    torch.load("hybrid_model_2.pth")
 )
 
 baseline_model.load_state_dict(

@@ -63,12 +63,10 @@ for epoch in range(EPOCHS):
         device
     )
 
-    alpha_value = model.fusion.alpha.item()
 
     print(
         f"Epoch [{epoch+1}/{EPOCHS}] | "
-        f"Loss: {loss:.4f} | "
-        f"Fusion Alpha: {alpha_value:.4f}"
+        f"Loss: {loss:.4f}"
     )
 
 # -----------------------------------

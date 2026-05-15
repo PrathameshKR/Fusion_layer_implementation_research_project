@@ -29,7 +29,7 @@ _, test_loader = get_dataloaders(
 model = HybridCNN().to(device)
 
 model.load_state_dict(
-    torch.load('hybrid_model.pth')
+    torch.load('hybrid_model_2.pth')
 )
 
 model.eval()
