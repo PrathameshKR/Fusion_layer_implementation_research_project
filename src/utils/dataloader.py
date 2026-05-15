@@ -5,23 +5,65 @@ import torch
 import cv2
 import numpy as np
 
+# ----------------------------
+# Add Gaussian Noise
+# ----------------------------
+
+def add_gaussian_noise(image, mean=0, std=25):
+
+    noise = np.random.normal(
+        mean,
+        std,
+        image.shape
+    ).astype(np.float32)
+
+    noisy = image.astype(np.float32) + noise
+
+    noisy = np.clip(noisy, 0, 255)
+
+    return noisy.astype(np.uint8)
+
+# ----------------------------
+# Hybrid Transform
+# ----------------------------
+
 class HybridTransform:
 
     def __call__(self, image):
 
-        raw_tensor = transforms.ToTensor()(image)
-
         image_np = np.array(image)
 
+        # --------------------------------
+        # RAW NOISY IMAGE
+        # --------------------------------
+
+        noisy_image = add_gaussian_noise(
+            image_np
+        )
+
+        raw_tensor = transforms.ToTensor()(
+            noisy_image
+        )
+
+        # --------------------------------
+        # FILTERED IMAGE
+        # --------------------------------
+
         filtered = cv2.GaussianBlur(
-            image_np,
+            noisy_image,
             (3,3),
             0
         )
 
-        filtered_tensor = transforms.ToTensor()(filtered)
+        filtered_tensor = transforms.ToTensor()(
+            filtered
+        )
 
         return raw_tensor, filtered_tensor
+
+# ----------------------------
+# Dataset Wrapper
+# ----------------------------
 
 class HybridDataset(torch.utils.data.Dataset):
 
@@ -42,6 +84,10 @@ class HybridDataset(torch.utils.data.Dataset):
         raw_img, filtered_img = self.transform(image)
 
         return raw_img, filtered_img, label
+
+# ----------------------------
+# Dataloader
+# ----------------------------
 
 def get_dataloaders(batch_size=64):
 
