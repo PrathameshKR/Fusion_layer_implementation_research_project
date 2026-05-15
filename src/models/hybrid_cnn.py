@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from src.fusion.weighted_fusion import AdaptiveFusion
+from src.fusion.adaptive_fusion import AdaptiveFusion
 
 class HybridCNN(nn.Module):
 

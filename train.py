@@ -77,7 +77,7 @@ for epoch in range(EPOCHS):
 
 torch.save(
     model.state_dict(),
-    "hybrid_model.pth"
+    "hybrid_model_2.pth"
 )
 
 print("Hybrid Model Saved.")
