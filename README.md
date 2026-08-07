@@ -1,4 +1,4 @@
-# Robust Hybrid Image Processing Framework Using Classical-DL Fusion
+# Multi-Backbone Feature Fusion for Image Classification
 
 ## Overview
 
